@@ -1,2 +1,10 @@
 .DS_Store
 build/
+*.hex
+*.vvp
+*.o
+*.elf
+*.bin
+*.hex
+*.dis
+*.size
