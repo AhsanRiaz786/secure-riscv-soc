@@ -10,7 +10,7 @@
 module boot_rom (
     input  wire        clk,
     input  wire [9:0]  addr,      // 10-bit address for 1024 words
-    output reg  [31:0] rdata
+    output wire [31:0] rdata      // Changed to wire for combinational read
 );
 
     // Boot ROM storage - 4KB
@@ -21,10 +21,8 @@ module boot_rom (
         $readmemh("boot_rom.hex", rom);
     end
     
-    // Synchronous read
-    always @(posedge clk) begin
-        rdata <= rom[addr];
-    end
+    // Combinational read - CPU needs immediate response
+    assign rdata = rom[addr];
 
 endmodule
 

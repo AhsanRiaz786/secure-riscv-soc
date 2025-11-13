@@ -1,7 +1,3 @@
-# Don't copy these into Docker image during build
-# (They'll be mounted as volumes anyway)
-
-build/
 *.vcd
 *.vvp
 *.o

@@ -13,7 +13,7 @@ module data_mem (
     input  wire [13:0] addr,         // 14-bit address for 16K words
     input  wire [31:0] wdata,        // Write data
     input  wire [3:0]  wstrb,        // Write strobe (byte enables)
-    output reg  [31:0] rdata         // Read data
+    output wire [31:0] rdata         // Read data (combinational)
 );
 
     // Data memory storage - 64KB
@@ -27,10 +27,8 @@ module data_mem (
         end
     end
     
-    // Synchronous read
-    always @(posedge clk) begin
-        rdata <= mem[addr];
-    end
+    // Combinational read - CPU needs immediate response
+    assign rdata = mem[addr];
     
     // Synchronous write with byte enables
     always @(posedge clk) begin

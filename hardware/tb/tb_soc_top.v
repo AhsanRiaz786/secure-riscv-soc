@@ -140,8 +140,10 @@ module tb_soc_top;
         $display("Waiting for UART output...\n");
         
         // Run simulation
-        // Let it run for a while (adjust as needed)
-        repeat(50000) @(posedge clk);
+        // Need lots of cycles for UART at 115200 baud
+        // Each char = ~87000 cycles at 100MHz (870us)
+        // Quick test prints ~150 chars = 13M cycles needed
+        repeat(15000000) @(posedge clk);
         
         // Check if we received any UART output
         $display("\n");
