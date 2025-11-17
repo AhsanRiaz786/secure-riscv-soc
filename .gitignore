@@ -6,3 +6,17 @@ build/
 *.bin
 *.dis
 *.size
+*.hex
+*.vcd
+*.wav
+mem_init/
+*.gtkw
+*.log
+*.wav
+*.wav.gz
+*.wav.gz.part
+*.wav.gz.part.1
+*.wav.gz.part.2
+*.wav.gz.part.3
+*.wav.gz.part.4
+*.wav.gz.part.5
