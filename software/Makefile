@@ -32,7 +32,7 @@ FW_HEX = $(MEM_INIT_DIR)/firmware.hex
 
 # Source files
 BOOT_SRC = boot/boot.S
-FW_SRCS = firmware/start.S common/uart.c firmware/test_minimal.c
+FW_SRCS = firmware/start.S common/uart.c firmware/test_mpu.c
 
 .PHONY: all clean boot firmware
 
