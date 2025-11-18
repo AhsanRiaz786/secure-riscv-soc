@@ -31,8 +31,12 @@ FW_BIN = $(BUILD_DIR)/firmware.bin
 FW_HEX = $(MEM_INIT_DIR)/firmware.hex
 
 # Source files
-BOOT_SRC = boot/boot.S
-FW_SRCS = firmware/start.S common/uart.c firmware/test_mpu.c
+BOOT_SRC = boot/boot_simple.S
+FW_SRCS = firmware/start.S common/uart.c firmware/malware.c
+
+# Secure boot configuration
+SIGNING_KEY = 0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF
+FW_VERSION = 1
 
 .PHONY: all clean boot firmware
 
@@ -71,9 +75,12 @@ $(BOOT_ELF): $(BOOT_SRC) boot/boot.ld | $(BUILD_DIR)
 firmware: $(FW_HEX)
 
 $(FW_HEX): $(FW_ELF) | $(MEM_INIT_DIR)
-	@echo "Creating firmware hex file..."
+	@echo "Creating firmware binary..."
 	$(OBJCOPY) -O binary $(FW_ELF) $(FW_BIN)
-	python3 $(TOOLS_DIR)/bin2hex.py $(FW_BIN) $(FW_HEX) 16384
+	@echo "Signing firmware..."
+	python3 $(TOOLS_DIR)/sign_firmware.py $(FW_BIN) $(SIGNING_KEY) $(FW_VERSION) $(FW_BIN).signed
+	@echo "Creating firmware hex file..."
+	python3 $(TOOLS_DIR)/bin2hex.py $(FW_BIN).signed $(FW_HEX) 16384
 	@echo "✓ Firmware ready"
 
 $(FW_ELF): $(FW_SRCS) firmware/firmware.ld | $(BUILD_DIR)
