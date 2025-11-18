@@ -4,7 +4,7 @@
  */
 
 OUTPUT_ARCH("riscv")
-ENTRY(_boot_start)
+ENTRY(_start)
 
 MEMORY
 {
@@ -13,13 +13,20 @@ MEMORY
 
 SECTIONS
 {
-    .boot : {
-        *(.boot)
-        *(.boot*)
+    .text : {
+        *(.text)
+        *(.text*)
+    } > rom
+    
+    .rodata : {
+        *(.rodata*)
     } > rom
     
     /DISCARD/ : {
-        *(.*)
+        *(.data*)
+        *(.bss*)
+        *(.comment)
+        *(.note*)
     }
 }
 

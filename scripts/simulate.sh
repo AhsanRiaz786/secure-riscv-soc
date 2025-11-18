@@ -60,7 +60,10 @@ iverilog -g2012 \
     "$RTL_DIR/memory/instruction_mem.v" \
     "$RTL_DIR/memory/data_mem.v" \
     "$RTL_DIR/peripherals/uart.v" \
-    "$RTL_DIR/security/mpu.v"
+    "$RTL_DIR/security/mpu.v" \
+    "$RTL_DIR/security/sha256.v" \
+    "$RTL_DIR/security/hmac_sha256.v" \
+    "$RTL_DIR/security/crypto_accelerator.v"
 
 if [ $? -eq 0 ]; then
     echo -e "${GREEN}✓ Compilation successful${NC}\n"
