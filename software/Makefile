@@ -32,7 +32,7 @@ FW_HEX = $(MEM_INIT_DIR)/firmware.hex
 
 # Source files
 BOOT_SRC = boot/boot_simple.S
-FW_SRCS = firmware/start.S common/uart.c firmware/malware.c
+FW_SRCS = firmware/start.S common/uart.c firmware/test_secure_boot.c
 
 # Secure boot configuration
 SIGNING_KEY = 0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF
