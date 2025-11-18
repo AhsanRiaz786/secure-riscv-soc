@@ -63,7 +63,7 @@ $(BOOT_HEX): $(BOOT_ELF) | $(MEM_INIT_DIR)
 
 $(BOOT_ELF): $(BOOT_SRC) boot/boot.ld | $(BUILD_DIR)
 	@echo "Compiling boot ROM..."
-	$(CC) $(ASFLAGS) -T boot/boot.ld -o $(BOOT_ELF) $(BOOT_SRC)
+	$(CC) $(ASFLAGS) $(LDFLAGS) -T boot/boot.ld -o $(BOOT_ELF) $(BOOT_SRC)
 	$(OBJDUMP) -d $(BOOT_ELF) > $(BUILD_DIR)/boot.dis
 	$(SIZE) $(BOOT_ELF)
 
@@ -78,7 +78,7 @@ $(FW_HEX): $(FW_ELF) | $(MEM_INIT_DIR)
 
 $(FW_ELF): $(FW_SRCS) firmware/firmware.ld | $(BUILD_DIR)
 	@echo "Compiling firmware..."
-	$(CC) $(CFLAGS) -T firmware/firmware.ld -o $(FW_ELF) $(FW_SRCS)
+	$(CC) $(CFLAGS) $(LDFLAGS) -T firmware/firmware.ld -o $(FW_ELF) $(FW_SRCS)
 	$(OBJDUMP) -d $(FW_ELF) > $(BUILD_DIR)/firmware.dis
 	$(SIZE) $(FW_ELF)
 

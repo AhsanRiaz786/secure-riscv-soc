@@ -33,6 +33,7 @@ echo -e "${GREEN}Build directory: $BUILD_DIR${NC}\n"
 
 # Check for required files
 echo -e "${BLUE}[1/4] Checking memory initialization files...${NC}"
+mkdir -p "$MEM_INIT_DIR"
 if [ ! -f "$MEM_INIT_DIR/boot_rom.hex" ]; then
     echo -e "${YELLOW}Warning: boot_rom.hex not found, creating empty file${NC}"
     echo "" > "$MEM_INIT_DIR/boot_rom.hex"
@@ -96,4 +97,3 @@ echo -e "${BLUE}================================================${NC}\n"
 echo -e "${BLUE}Generated files:${NC}"
 ls -lh *.vvp *.vcd 2>/dev/null | awk '{print "  " $9 " (" $5 ")"}'
 echo ""
-
