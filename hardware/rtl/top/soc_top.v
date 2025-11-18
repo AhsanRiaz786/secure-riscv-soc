@@ -65,8 +65,33 @@ module soc_top (
     wire [31:0] uart_rdata;
     
     //=================================================================
+    // Memory Protection Unit (MPU)
+    //=================================================================
+    wire mpu_violation;
+    wire mpu_access_allowed;
+    
+    // Privilege mode: 0 = user mode, 1 = machine mode
+    // For now, always run in user mode to test MPU
+    // TODO: Connect to actual CPU privilege level when available
+    wire privileged_mode = 1'b0;
+    
+    mpu mpu_inst (
+        .addr(mem_addr),
+        .is_write(|mem_wstrb),           // Any write strobe active?
+        .is_exec(mem_instr),              // Instruction fetch?
+        .privileged_mode(privileged_mode),
+        .violation(mpu_violation),
+        .access_allowed(mpu_access_allowed)
+    );
+    
+    // Generate trap signal when MPU detects violation during valid access
+    wire mpu_trap = mpu_violation && mem_valid;
+    
+    //=================================================================
     // PicoRV32 CPU Core
     //=================================================================
+    wire cpu_trap;  // CPU's own trap signal
+    
     picorv32 #(
         .ENABLE_COUNTERS(1),
         .ENABLE_COUNTERS64(1),
@@ -97,7 +122,7 @@ module soc_top (
     ) cpu (
         .clk       (clk),
         .resetn    (rst_n),
-        .trap      (trap),
+        .trap      (cpu_trap),
         
         // Memory Interface
         .mem_valid (mem_valid),
@@ -170,6 +195,9 @@ module soc_top (
     //=================================================================
     // UART Peripheral
     //=================================================================
+    // Note: For real hardware, BAUD_RATE should be 115200.
+    // For simulation we now monitor UART at the bus level in the
+    // testbench, so the exact baud rate here is less important.
     uart #(
         .CLK_FREQ(100000000),
         .BAUD_RATE(115200)
@@ -197,6 +225,11 @@ module soc_top (
     // Memory Ready Signal (single-cycle memory for now)
     //=================================================================
     assign mem_ready = mem_valid;
+    
+    //=================================================================
+    // Trap Signal (CPU trap OR MPU violation)
+    //=================================================================
+    assign trap = cpu_trap || mpu_trap;
     
     //=================================================================
     // Debug Outputs

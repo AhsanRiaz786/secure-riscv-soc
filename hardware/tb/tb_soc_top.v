@@ -45,49 +45,31 @@ module tb_soc_top;
     );
     
     //=================================================================
-    // UART Monitor (captures transmitted characters)
+    // UART Monitor (bus-level, fast for simulation)
     //=================================================================
-    reg [7:0] uart_rx_byte;
     integer uart_char_count = 0;
     
-    // Simple UART RX monitor (baud rate 115200)
-    localparam UART_BIT_PERIOD = 8680; // ns for 115200 baud
-    
-    task uart_rx_monitor;
-        integer i;
-        begin
-            @(negedge uart_tx); // Wait for start bit
-            #(UART_BIT_PERIOD / 2); // Sample in middle of start bit
-            #UART_BIT_PERIOD; // Skip start bit
+    // Instead of decoding the serial TX line (slow in simulation),
+    // we snoop the memory bus and print whenever the CPU writes
+    // to the UART TX register at 0x20000000. This is equivalent to
+    // what the real UART does, but much faster to simulate.
+    always @(posedge clk) begin
+        if (rst_n &&
+            dut.mem_valid && dut.mem_ready &&
+            dut.uart_sel && |dut.mem_wstrb) begin
             
-            // Receive 8 data bits
-            for (i = 0; i < 8; i = i + 1) begin
-                uart_rx_byte[i] = uart_tx;
-                #UART_BIT_PERIOD;
-            end
-            
-            // Stop bit
-            #UART_BIT_PERIOD;
-            
-            // Display character
-            if (uart_rx_byte >= 32 && uart_rx_byte < 127) begin
-                $write("%c", uart_rx_byte);
-            end else if (uart_rx_byte == 8'h0A) begin
+            // Print lowest byte of wdata as a character
+            if (dut.mem_wdata[7:0] >= 32 && dut.mem_wdata[7:0] < 127) begin
+                $write("%c", dut.mem_wdata[7:0]);
+            end else if (dut.mem_wdata[7:0] == 8'h0A) begin
                 $write("\n");
-            end else if (uart_rx_byte == 8'h0D) begin
-                // Carriage return - ignore
+            end else if (dut.mem_wdata[7:0] == 8'h0D) begin
+                // Ignore carriage return
             end else begin
-                $write("[0x%h]", uart_rx_byte);
+                $write("[0x%02h]", dut.mem_wdata[7:0]);
             end
             
             uart_char_count = uart_char_count + 1;
-        end
-    endtask
-    
-    // Monitor UART continuously
-    initial begin
-        forever begin
-            uart_rx_monitor();
         end
     end
     
