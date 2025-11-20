@@ -31,7 +31,7 @@ FW_BIN = $(BUILD_DIR)/firmware.bin
 FW_HEX = $(MEM_INIT_DIR)/firmware.hex
 
 # Source files
-BOOT_SRC = boot/boot_simple.S
+BOOT_SRC = boot/boot_secure.S
 FW_SRCS = firmware/start.S common/uart.c firmware/test_secure_boot.c
 
 # Secure boot configuration
