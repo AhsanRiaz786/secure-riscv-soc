@@ -55,6 +55,7 @@ module soc_top (
     wire instr_mem_sel  = (mem_addr >= 32'h00010000 && mem_addr < 32'h00020000);
     wire data_mem_sel   = (mem_addr >= 32'h10000000 && mem_addr < 32'h10010000);
     wire uart_sel       = (mem_addr >= 32'h20000000 && mem_addr < 32'h20000100);
+    wire crypto_sel     = (mem_addr >= 32'h30000000 && mem_addr < 32'h30000100);
     
     //=================================================================
     // Memory Read Data Signals
@@ -63,6 +64,7 @@ module soc_top (
     wire [31:0] instr_mem_rdata;
     wire [31:0] data_mem_rdata;
     wire [31:0] uart_rdata;
+    wire [31:0] crypto_rdata;
     
     //=================================================================
     // Memory Protection Unit (MPU)
@@ -213,12 +215,40 @@ module soc_top (
     );
     
     //=================================================================
+    // Crypto Accelerator (SHA-256, HMAC)
+    //=================================================================
+    wire [31:0] crypto_mem_addr;
+    wire        crypto_mem_valid;
+    wire [31:0] crypto_mem_rdata;
+    wire        crypto_mem_ready;
+    
+    // Crypto needs to read firmware from instruction memory
+    // Route its memory requests appropriately
+    assign crypto_mem_rdata = (crypto_mem_addr >= 32'h00010000 && crypto_mem_addr < 32'h00020000) ? 
+                               instr_mem_rdata : 32'h0;
+    assign crypto_mem_ready = 1'b1;  // Instant response for now
+    
+    crypto_accelerator crypto_inst (
+        .clk        (clk),
+        .rst_n      (rst_n),
+        .addr       (mem_addr[9:2]),  // 8 bits for address
+        .we         (mem_valid && mem_ready && crypto_sel && |mem_wstrb),
+        .wdata      (mem_wdata),
+        .rdata      (crypto_rdata),
+        .mem_addr   (crypto_mem_addr),
+        .mem_valid  (crypto_mem_valid),
+        .mem_rdata  (crypto_mem_rdata),
+        .mem_ready  (crypto_mem_ready)
+    );
+    
+    //=================================================================
     // Memory Read Multiplexer
     //=================================================================
     assign mem_rdata = boot_rom_sel   ? boot_rom_rdata :
                        instr_mem_sel  ? instr_mem_rdata :
                        data_mem_sel   ? data_mem_rdata :
                        uart_sel       ? uart_rdata :
+                       crypto_sel     ? crypto_rdata :
                        32'h00000000;
     
     //=================================================================
