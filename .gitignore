@@ -20,3 +20,8 @@ mem_init/
 *.wav.gz.part.3
 *.wav.gz.part.4
 *.wav.gz.part.5
+
+# Cursor/AI generated files
+cursor_check_*.md
+*_test
+soc_sim
