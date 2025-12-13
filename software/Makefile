@@ -12,7 +12,7 @@ SIZE    = $(TOOLCHAIN_PREFIX)size
 
 # Flags
 ARCH_FLAGS = -march=rv32i -mabi=ilp32
-CFLAGS = $(ARCH_FLAGS) -O2 -g -Wall -Wextra -ffreestanding -nostdlib
+CFLAGS = $(ARCH_FLAGS) -O2 -g -Wall -Wextra -ffreestanding -nostdlib -I./common
 ASFLAGS = $(ARCH_FLAGS)
 LDFLAGS = $(ARCH_FLAGS) -nostdlib -nostartfiles
 
@@ -32,7 +32,7 @@ FW_HEX = $(MEM_INIT_DIR)/firmware.hex
 
 # Source files
 BOOT_SRC = boot/boot_secure.S
-FW_SRCS = firmware/start.S common/uart.c firmware/test_secure_boot.c
+FW_SRCS = firmware/start.S common/uart.c firmware/test_anti_replay.c
 
 # Secure boot configuration
 SIGNING_KEY = 0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF

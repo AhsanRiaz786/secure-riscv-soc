@@ -48,9 +48,17 @@ module mpu (
     localparam UART_START       = 32'h20000000;
     localparam UART_END         = 32'h200000FF;
     
+    // Crypto Accelerator
+    localparam CRYPTO_START      = 32'h30000000;
+    localparam CRYPTO_END        = 32'h300000FF;
+    
     // Key Store - PROTECTED REGION
     localparam KEY_STORE_START  = 32'h40000000;
     localparam KEY_STORE_END    = 32'h400000FF;
+    
+    // Anti-Replay Protection
+    localparam ANTI_REPLAY_START = 32'h50000000;
+    localparam ANTI_REPLAY_END   = 32'h500000FF;
     
     //=================================================================
     // Protection Logic (Combinational - No clock cycles!)
@@ -110,6 +118,15 @@ module mpu (
         end
         
         //-------------------------------------------------------------
+        // Crypto Accelerator Protection
+        //-------------------------------------------------------------
+        else if (addr >= CRYPTO_START && addr <= CRYPTO_END) begin
+            // OK: Can access crypto accelerator (needed for secure boot)
+            violation = 1'b0;
+            access_allowed = 1'b1;
+        end
+        
+        //-------------------------------------------------------------
         // KEY STORE Protection - CRITICAL SECURITY FEATURE
         //-------------------------------------------------------------
         else if (addr >= KEY_STORE_START && addr <= KEY_STORE_END) begin
@@ -123,6 +140,15 @@ module mpu (
                 violation = 1'b1;
                 access_allowed = 1'b0;
             end
+        end
+        
+        //-------------------------------------------------------------
+        // Anti-Replay Protection
+        //-------------------------------------------------------------
+        else if (addr >= ANTI_REPLAY_START && addr <= ANTI_REPLAY_END) begin
+            // OK: Can access anti-replay modules
+            violation = 1'b0;
+            access_allowed = 1'b1;
         end
         
         //-------------------------------------------------------------

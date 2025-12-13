@@ -65,6 +65,10 @@ module tb_soc_top;
                 $write("\n");
             end else if (dut.mem_wdata[7:0] == 8'h0D) begin
                 // Ignore carriage return
+            end else if (dut.mem_wdata[7:0] == 8'h04) begin
+                $display("\n[SIM] EOT received - Test Complete");
+                #100;
+                $finish;
             end else begin
                 $write("[0x%02h]", dut.mem_wdata[7:0]);
             end
@@ -104,8 +108,8 @@ module tb_soc_top;
     // Test Control
     //=================================================================
     initial begin
-        $dumpfile("soc_simulation.vcd");
-        $dumpvars(0, tb_soc_top);
+        // $dumpfile("soc_simulation.vcd");
+        // $dumpvars(0, tb_soc_top);
         
         // Display test header
         $display("\n================================================");
@@ -122,10 +126,12 @@ module tb_soc_top;
         $display("Waiting for UART output...\n");
         
         // Run simulation
-        // Need lots of cycles for UART at 115200 baud
-        // Each char = ~87000 cycles at 100MHz (870us)
-        // Quick test prints ~150 chars = 13M cycles needed
-        repeat(15000000) @(posedge clk);
+        // Need lots of cycles for:
+        // - Secure boot HMAC calculation (can take millions of cycles for 65KB firmware)
+        // - Anti-replay tests (multiple validation cycles)
+        // - UART output (bus-level monitoring, fast)
+        // Increased to 50M cycles to handle crypto operations
+        repeat(50000000) @(posedge clk);
         
         // Check if we received any UART output
         $display("\n");
@@ -154,8 +160,10 @@ module tb_soc_top;
     // Timeout Watchdog
     //=================================================================
     initial begin
-        #100_000_000; // 100ms timeout
+        #500_000_000; // 500ms timeout (increased for crypto operations)
         $display("\n[TIMEOUT] Simulation exceeded time limit!");
+        $display("This might indicate the crypto accelerator is stuck.");
+        $display("Check if HMAC calculation completed.");
         $finish;
     end
 

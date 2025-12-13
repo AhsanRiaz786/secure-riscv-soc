@@ -163,15 +163,17 @@ verify_wait:
     
     //=================================================================
     // Step 6: Read calculated HMAC
-    //=================================================================
-    lw   a0, 0x40(t0)    // HASH_0
-    lw   a1, 0x44(t0)    // HASH_1
-    lw   a2, 0x48(t0)    // HASH_2
-    lw   a3, 0x4C(t0)    // HASH_3
-    lw   a4, 0x50(t0)    // HASH_4
-    lw   a5, 0x54(t0)    // HASH_5
-    lw   a6, 0x58(t0)    // HASH_6
-    lw   a7, 0x5C(t0)    // HASH_7
+    // Note: Hash registers are at word addresses 0x10-0x17 (byte offsets 0x40-0x5C)
+    // But we access via byte addresses, so use 0x40, 0x44, etc.
+    // The soc_top will convert to word addresses automatically
+    lw   a0, 0x40(t0)    // HASH_0 (word addr 0x10)
+    lw   a1, 0x44(t0)    // HASH_1 (word addr 0x11)
+    lw   a2, 0x48(t0)    // HASH_2 (word addr 0x12)
+    lw   a3, 0x4C(t0)    // HASH_3 (word addr 0x13)
+    lw   a4, 0x50(t0)    // HASH_4 (word addr 0x14)
+    lw   a5, 0x54(t0)    // HASH_5 (word addr 0x15)
+    lw   a6, 0x58(t0)    // HASH_6 (word addr 0x16)
+    lw   a7, 0x5C(t0)    // HASH_7 (word addr 0x17)
     
     //=================================================================
     // Step 7: Load expected signature from firmware header
@@ -219,9 +221,11 @@ verify_wait:
     li   a1, '\n'
     sb   a1, 0(a0)
     
-    // Jump to firmware
-    li   t0, FIRMWARE_BASE
-    jr   t0
+    // Jump to firmware entry point (0x00010000)
+    // Load firmware base address and jump immediately
+    lui  t0, 0x00010        // Load upper 20 bits: 0x00010000
+    addi t0, t0, 0          // Complete: 0x00010000
+    jr   t0                 // Jump to firmware
 
 //=================================================================
 // FAILURE HANDLERS

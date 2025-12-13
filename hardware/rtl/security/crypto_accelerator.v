@@ -180,31 +180,32 @@ module crypto_accelerator (
             
         end else if (we) begin
             case (addr)
-                ADDR_CTRL: begin
+                8'h00: begin  // ADDR_CTRL (0x30000000 / 4)
                     ctrl_reg <= wdata;
                 end
                 
-                ADDR_MODE: begin
+                8'h02: begin  // ADDR_MODE (0x30000008 / 4)
                     mode_reg <= wdata;
                 end
                 
-                ADDR_MSG_ADDR: begin
+                8'h03: begin  // ADDR_MSG_ADDR (0x3000000C / 4)
                     msg_addr_reg <= wdata;
                 end
                 
-                ADDR_MSG_LEN: begin
+                8'h04: begin  // ADDR_MSG_LEN (0x30000010 / 4)
                     msg_len_reg <= wdata;
                 end
                 
-                // Key registers (0x14-0x30)
-                8'h14: key_reg[0] <= wdata;
-                8'h18: key_reg[1] <= wdata;
-                8'h1C: key_reg[2] <= wdata;
-                8'h20: key_reg[3] <= wdata;
-                8'h24: key_reg[4] <= wdata;
-                8'h28: key_reg[5] <= wdata;
-                8'h2C: key_reg[6] <= wdata;
-                8'h30: key_reg[7] <= wdata;
+                // Key registers (byte offsets 0x14-0x30, word addresses 0x05-0x0C)
+                // mem_addr[9:2] for 0x30000014 = (0x14 >> 2) = 0x05
+                8'h05: key_reg[0] <= wdata;  // 0x30000014 / 4 = 0x05
+                8'h06: key_reg[1] <= wdata;  // 0x30000018 / 4 = 0x06
+                8'h07: key_reg[2] <= wdata;  // 0x3000001C / 4 = 0x07
+                8'h08: key_reg[3] <= wdata;  // 0x30000020 / 4 = 0x08
+                8'h09: key_reg[4] <= wdata;  // 0x30000024 / 4 = 0x09
+                8'h0A: key_reg[5] <= wdata;  // 0x30000028 / 4 = 0x0A
+                8'h0B: key_reg[6] <= wdata;  // 0x3000002C / 4 = 0x0B
+                8'h0C: key_reg[7] <= wdata;  // 0x30000030 / 4 = 0x0C
                 
                 default: begin
                     // Read-only or invalid address
@@ -218,31 +219,31 @@ module crypto_accelerator (
     //=================================================================
     always @(*) begin
         case (addr)
-            ADDR_CTRL:     rdata = ctrl_reg;
-            ADDR_STATUS:   rdata = status_reg;
-            ADDR_MODE:     rdata = mode_reg;
-            ADDR_MSG_ADDR: rdata = msg_addr_reg;
-            ADDR_MSG_LEN:  rdata = msg_len_reg;
+            8'h00: rdata = ctrl_reg;      // ADDR_CTRL (0x30000000 / 4)
+            8'h01: rdata = status_reg;    // ADDR_STATUS (0x30000004 / 4)
+            8'h02: rdata = mode_reg;      // ADDR_MODE (0x30000008 / 4)
+            8'h03: rdata = msg_addr_reg;  // ADDR_MSG_ADDR (0x3000000C / 4)
+            8'h04: rdata = msg_len_reg;   // ADDR_MSG_LEN (0x30000010 / 4)
             
-            // Key registers
-            8'h14: rdata = key_reg[0];
-            8'h18: rdata = key_reg[1];
-            8'h1C: rdata = key_reg[2];
-            8'h20: rdata = key_reg[3];
-            8'h24: rdata = key_reg[4];
-            8'h28: rdata = key_reg[5];
-            8'h2C: rdata = key_reg[6];
-            8'h30: rdata = key_reg[7];
+            // Key registers (word addresses: byte offset / 4)
+            8'h05: rdata = key_reg[0];  // 0x30000014 / 4
+            8'h06: rdata = key_reg[1];  // 0x30000018 / 4
+            8'h07: rdata = key_reg[2];  // 0x3000001C / 4
+            8'h08: rdata = key_reg[3];  // 0x30000020 / 4
+            8'h09: rdata = key_reg[4];  // 0x30000024 / 4
+            8'h0A: rdata = key_reg[5];  // 0x30000028 / 4
+            8'h0B: rdata = key_reg[6];  // 0x3000002C / 4
+            8'h0C: rdata = key_reg[7];  // 0x30000030 / 4
             
-            // Hash output registers
-            8'h40: rdata = hash_reg[0];
-            8'h44: rdata = hash_reg[1];
-            8'h48: rdata = hash_reg[2];
-            8'h4C: rdata = hash_reg[3];
-            8'h50: rdata = hash_reg[4];
-            8'h54: rdata = hash_reg[5];
-            8'h58: rdata = hash_reg[6];
-            8'h5C: rdata = hash_reg[7];
+            // Hash output registers (word addresses: byte offset / 4)
+            8'h10: rdata = hash_reg[0]; // 0x30000040 / 4
+            8'h11: rdata = hash_reg[1]; // 0x30000044 / 4
+            8'h12: rdata = hash_reg[2]; // 0x30000048 / 4
+            8'h13: rdata = hash_reg[3]; // 0x3000004C / 4
+            8'h14: rdata = hash_reg[4]; // 0x30000050 / 4
+            8'h15: rdata = hash_reg[5]; // 0x30000054 / 4
+            8'h16: rdata = hash_reg[6]; // 0x30000058 / 4
+            8'h17: rdata = hash_reg[7]; // 0x3000005C / 4
             
             default: rdata = 32'h0;
         endcase

@@ -14,8 +14,9 @@
  *   0x00010000 - 0x0001FFFF : Instruction Memory (64KB)
  *   0x10000000 - 0x1000FFFF : Data Memory (64KB)
  *   0x20000000 - 0x200000FF : UART
- *   0x30000000 - 0x300000FF : Crypto Accelerator (future)
- *   0x40000000 - 0x400000FF : Key Store (future)
+ *   0x30000000 - 0x300000FF : Crypto Accelerator
+ *   0x40000000 - 0x400000FF : Key Store
+ *   0x50000000 - 0x500000FF : Anti-Replay Protection
  */
 
 `timescale 1ns / 1ps
@@ -56,6 +57,7 @@ module soc_top (
     wire data_mem_sel   = (mem_addr >= 32'h10000000 && mem_addr < 32'h10010000);
     wire uart_sel       = (mem_addr >= 32'h20000000 && mem_addr < 32'h20000100);
     wire crypto_sel     = (mem_addr >= 32'h30000000 && mem_addr < 32'h30000100);
+    wire anti_replay_sel = (mem_addr >= 32'h50000000 && mem_addr < 32'h50000100);
     
     //=================================================================
     // Memory Read Data Signals
@@ -65,6 +67,7 @@ module soc_top (
     wire [31:0] data_mem_rdata;
     wire [31:0] uart_rdata;
     wire [31:0] crypto_rdata;
+    wire [31:0] anti_replay_rdata;
     
     //=================================================================
     // Memory Protection Unit (MPU)
@@ -173,10 +176,22 @@ module soc_top (
     //=================================================================
     // Instruction Memory (64KB) - Application firmware
     //=================================================================
+    // Multiplex address between CPU and crypto accelerator
+    // Address calculation: extract word index from address
+    // For 0x00010000-0x0001FFFF: word_idx = (addr - 0x00010000) >> 2
+    wire [13:0] instr_mem_addr_mux;  // 14 bits for 16K words
+    // Crypto accelerator only reads when it has a valid request
+    wire        crypto_reading_instr = crypto_mem_valid && (crypto_mem_addr >= 32'h00010000 && crypto_mem_addr < 32'h00020000);
+    // Explicitly calculate word index: (addr - base) >> 2
+    wire [31:0] cpu_word_addr = (mem_addr - 32'h00010000) >> 2;
+    wire [31:0] crypto_word_addr = (crypto_mem_addr - 32'h00010000) >> 2;
+    // Only use crypto address if crypto is actively reading, otherwise use CPU address
+    assign instr_mem_addr_mux = crypto_reading_instr ? crypto_word_addr[13:0] : cpu_word_addr[13:0];
+    
     instruction_mem instr_mem_inst (
         .clk   (clk),
         .we    (mem_valid && mem_ready && instr_mem_sel && |mem_wstrb),
-        .addr  (mem_addr[15:2]),          // Word-addressed
+        .addr  (instr_mem_addr_mux),      // Word-addressed (multiplexed)
         .wdata (mem_wdata),
         .wstrb (mem_wstrb),
         .rdata (instr_mem_rdata)
@@ -242,6 +257,48 @@ module soc_top (
     );
     
     //=================================================================
+    // Anti-Replay Protection Modules
+    //=================================================================
+    // Monotonic Counter (0x50000000 - 0x5000000F)
+    wire [31:0] counter_rdata;
+    monotonic_counter counter_inst (
+        .clk   (clk),
+        .rst_n (rst_n),
+        .addr  (mem_addr[3:0]),
+        .we    (mem_valid && mem_ready && anti_replay_sel && (mem_addr[7:4] == 4'h0) && |mem_wstrb),
+        .wdata (mem_wdata),
+        .rdata (counter_rdata)
+    );
+    
+    // Nonce Generator (0x50000010 - 0x5000001F)
+    wire [31:0] nonce_rdata;
+    nonce_gen nonce_inst (
+        .clk   (clk),
+        .rst_n (rst_n),
+        .addr  (mem_addr[3:0]),
+        .we    (mem_valid && mem_ready && anti_replay_sel && (mem_addr[7:4] == 4'h1) && |mem_wstrb),
+        .wdata (mem_wdata),
+        .rdata (nonce_rdata)
+    );
+    
+    // Anti-Replay Engine (0x50000020 - 0x5000003F)
+    wire [31:0] replay_rdata;
+    anti_replay replay_inst (
+        .clk   (clk),
+        .rst_n (rst_n),
+        .addr  (mem_addr[4:0]),
+        .we    (mem_valid && mem_ready && anti_replay_sel && (mem_addr[7:5] == 3'b001) && |mem_wstrb),
+        .wdata (mem_wdata),
+        .rdata (replay_rdata)
+    );
+    
+    // Anti-replay read multiplexer
+    assign anti_replay_rdata = (mem_addr[7:4] == 4'h0) ? counter_rdata :
+                               (mem_addr[7:4] == 4'h1) ? nonce_rdata :
+                               (mem_addr[7:5] == 3'b001) ? replay_rdata :
+                               32'h00000000;
+    
+    //=================================================================
     // Memory Read Multiplexer
     //=================================================================
     assign mem_rdata = boot_rom_sel   ? boot_rom_rdata :
@@ -249,6 +306,7 @@ module soc_top (
                        data_mem_sel   ? data_mem_rdata :
                        uart_sel       ? uart_rdata :
                        crypto_sel     ? crypto_rdata :
+                       anti_replay_sel ? anti_replay_rdata :
                        32'h00000000;
     
     //=================================================================
