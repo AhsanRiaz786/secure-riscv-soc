@@ -19,6 +19,7 @@
 #define UART_BASE           0x20000000
 #define CRYPTO_BASE         0x30000000
 #define KEY_STORE_BASE      0x40000000    // Protected by MPU!
+#define ANTI_REPLAY_BASE    0x50000000    // Anti-replay protection
 
 // UART Registers
 #define UART_TX_REG         (*(volatile unsigned int*)(UART_BASE + 0x00))
@@ -72,6 +73,55 @@
 #define HMAC_KEY_0          (*(volatile unsigned int*)(KEY_STORE_BASE + 0x10))
 #define HMAC_KEY_1          (*(volatile unsigned int*)(KEY_STORE_BASE + 0x14))
 #define ROOT_KEY            (*(volatile unsigned int*)(KEY_STORE_BASE + 0x20))
+
+// Anti-Replay Protection Registers
+// Monotonic Counter (0x50000000 - 0x5000000F)
+#define COUNTER_VALUE       (*(volatile unsigned int*)(ANTI_REPLAY_BASE + 0x00))
+#define COUNTER_CTRL        (*(volatile unsigned int*)(ANTI_REPLAY_BASE + 0x04))
+#define COUNTER_LOCK        (*(volatile unsigned int*)(ANTI_REPLAY_BASE + 0x08))
+#define COUNTER_STATUS      (*(volatile unsigned int*)(ANTI_REPLAY_BASE + 0x0C))
+
+// Nonce Generator (0x50000010 - 0x5000001F)
+#define NONCE_VALUE         (*(volatile unsigned int*)(ANTI_REPLAY_BASE + 0x10))
+#define NONCE_SEED          (*(volatile unsigned int*)(ANTI_REPLAY_BASE + 0x14))
+#define NONCE_CTRL          (*(volatile unsigned int*)(ANTI_REPLAY_BASE + 0x18))
+#define NONCE_STATUS        (*(volatile unsigned int*)(ANTI_REPLAY_BASE + 0x1C))
+
+// Anti-Replay Engine (0x50000020 - 0x5000003F)
+#define REPLAY_LAST_COUNTER (*(volatile unsigned int*)(ANTI_REPLAY_BASE + 0x20))
+#define REPLAY_CHECK_COUNTER (*(volatile unsigned int*)(ANTI_REPLAY_BASE + 0x24))
+#define REPLAY_CHECK_NONCE  (*(volatile unsigned int*)(ANTI_REPLAY_BASE + 0x28))
+#define REPLAY_VALIDATE     (*(volatile unsigned int*)(ANTI_REPLAY_BASE + 0x2C))
+#define REPLAY_STATUS       (*(volatile unsigned int*)(ANTI_REPLAY_BASE + 0x30))
+#define REPLAY_CACHE_SIZE   (*(volatile unsigned int*)(ANTI_REPLAY_BASE + 0x34))
+#define REPLAY_CTRL         (*(volatile unsigned int*)(ANTI_REPLAY_BASE + 0x38))
+
+// Counter Control Bits
+#define COUNTER_CTRL_INCREMENT  (1 << 0)
+#define COUNTER_CTRL_LOAD       (1 << 1)
+#define COUNTER_LOCK_MAGIC      0xDEAD10CC
+
+// Counter Status Bits
+#define COUNTER_STATUS_LOCKED   (1 << 0)
+#define COUNTER_STATUS_OVERFLOW (1 << 1)
+
+// Nonce Control Bits
+#define NONCE_CTRL_ENABLE       (1 << 0)
+#define NONCE_CTRL_ADVANCE      (1 << 1)
+
+// Nonce Status Bits
+#define NONCE_STATUS_READY      (1 << 0)
+
+// Replay Status Bits
+#define REPLAY_STATUS_VALID        (1 << 0)
+#define REPLAY_STATUS_REPLAY       (1 << 1)
+#define REPLAY_STATUS_BAD_COUNTER  (1 << 2)
+#define REPLAY_STATUS_BAD_NONCE    (1 << 3)
+#define REPLAY_STATUS_READY        (1 << 4)
+
+// Replay Control Bits
+#define REPLAY_CTRL_RESET_CACHE (1 << 0)
+#define REPLAY_CTRL_RESET_STATE (1 << 1)
 
 #endif // SOC_MAP_H
 

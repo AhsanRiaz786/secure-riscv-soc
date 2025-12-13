@@ -63,7 +63,10 @@ iverilog -g2012 \
     "$RTL_DIR/security/mpu.v" \
     "$RTL_DIR/security/sha256.v" \
     "$RTL_DIR/security/hmac_sha256.v" \
-    "$RTL_DIR/security/crypto_accelerator.v"
+    "$RTL_DIR/security/crypto_accelerator.v" \
+    "$RTL_DIR/security/monotonic_counter.v" \
+    "$RTL_DIR/security/nonce_gen.v" \
+    "$RTL_DIR/security/anti_replay.v"
 
 if [ $? -eq 0 ]; then
     echo -e "${GREEN}✓ Compilation successful${NC}\n"
