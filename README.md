@@ -240,7 +240,7 @@ Hardware-accelerated cryptographic operations:
 
 1. **Clone the repository**
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/AhsanRiaz786/secure-riscv-soc/edit/main/README.md
    cd secure-riscv-soc
    ```
 
