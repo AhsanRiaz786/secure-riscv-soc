@@ -193,6 +193,8 @@ Hardware-accelerated cryptographic operations:
 
 ### Prerequisites
 
+> **💡 Tip**: If you prefer not to install tools manually, use the Docker Setup section below. The Docker image includes all required tools pre-installed.
+
 #### Required Tools
 
 1. **RISC-V Toolchain**
@@ -254,6 +256,88 @@ Hardware-accelerated cryptographic operations:
    cd software
    make all
    ```
+
+### Docker Setup (Recommended)
+
+For a consistent development environment across all platforms, you can use Docker. This avoids manual installation of dependencies.
+
+#### Option 1: Pull Pre-built Image (Fastest)
+
+Pull the pre-built Docker image from Docker Hub:
+
+```bash
+docker pull ahsanriaz8000/secure-riscv-soc:latest
+```
+
+Then run the container:
+
+```bash
+docker run -it --rm \
+  -v $(pwd):/workspace \
+  -w /workspace \
+  ahsanriaz8000/secure-riscv-soc:latest \
+  /bin/bash
+```
+
+#### Option 2: Using Docker Compose (Recommended)
+
+1. **Start the development container**
+   ```bash
+   docker-compose up -d
+   ```
+
+2. **Enter the container**
+   ```bash
+   docker-compose exec riscv-soc bash
+   ```
+
+3. **Build and run simulations**
+   ```bash
+   cd software
+   make all
+   cd ..
+   ./scripts/simulate.sh
+   ```
+
+#### Option 3: Build from Dockerfile
+
+Build the Docker image locally:
+
+```bash
+docker build -t secure-riscv-soc:latest .
+```
+
+Then run it:
+
+```bash
+docker run -it --rm \
+  -v $(pwd):/workspace \
+  -w /workspace \
+  secure-riscv-soc:latest \
+  /bin/bash
+```
+
+#### Docker Benefits
+
+- ✅ **No manual toolchain setup** - All tools pre-installed
+- ✅ **Consistent environment** - Same tools on Linux, macOS, Windows
+- ✅ **Isolated workspace** - No conflicts with system packages
+- ✅ **Easy sharing** - Same image works for all team members
+
+#### Stopping the Docker Container
+
+If using docker-compose:
+
+```bash
+docker-compose down
+```
+
+If running manually:
+
+```bash
+# Just exit the container (--rm flag auto-removes it)
+exit
+```
 
 ### Building the Project
 
